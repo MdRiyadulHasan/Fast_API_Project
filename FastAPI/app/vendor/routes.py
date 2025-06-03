@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, HTTPException, status
 from typing import Optional
 
-from app.vendor.schemas import VendorOut, VendorListResponse, VendorCreate
-from app.vendor.services import get_all_vendors, create_vendor
+from app.vendor.schemas import VendorOut, VendorListResponse, VendorCreate, VendorUpdate
+from app.vendor.services import get_all_vendors, create_vendor, delete_vendor_by_id, update_vendor
 
 router = APIRouter()
 
@@ -34,3 +34,25 @@ async def create_new_vendor(vendor_in: VendorCreate):
     if not vendor:
         raise HTTPException(status_code=400, detail="Failed to create vendor")
     return vendor
+
+
+
+
+@router.delete(
+    "/delete_vendors/{vendor_id}/",
+    status_code=status.HTTP_200_OK,
+    summary="Delete a vendor by ID"
+)
+async def delete_vendor(vendor_id: int):
+    deleted = await delete_vendor_by_id(vendor_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Vendor not found or already deleted")
+    return {"message": f"Vendor with ID {vendor_id} has been deleted"}
+
+
+@router.put("/vendor_update/{vendor_id}/", response_model=VendorOut)
+async def update_existing_vendor(vendor_id: int, vendor_in: VendorUpdate):
+    updated_vendor = await update_vendor(vendor_id, vendor_in)
+    if not updated_vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    return updated_vendor

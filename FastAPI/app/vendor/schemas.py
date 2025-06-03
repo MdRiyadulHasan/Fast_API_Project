@@ -32,3 +32,11 @@ class VendorCreate(BaseModel):
 
     class Config:
         from_attributes = True  # for SQLAlchemy compatibility in Pydantic v2
+
+class VendorUpdate(BaseModel):
+    textId: Optional[str]
+    title: Optional[str]
+    details: Optional[str]
+    memberEmail: Optional[str]
+    url: Optional[str]
+    status: Optional[str]

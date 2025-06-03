@@ -1,10 +1,11 @@
 from sqlalchemy.future import select
 from sqlalchemy import and_, func
 from app.db.session import AsyncSessionLocal
+# from app.db import async_session
 from datetime import datetime
 from app.vendor.models import Vendor
 from typing import Optional, List, Tuple
-from app.vendor.schemas import VendorCreate
+from app.vendor.schemas import VendorCreate, VendorUpdate
 
 async def get_all_vendors(
     status: Optional[str] = None,
@@ -50,3 +51,37 @@ async def create_vendor(vendor_in: VendorCreate):
         await session.commit()
         await session.refresh(new_vendor)  # to get the generated ID and timestamps
         return new_vendor
+
+  
+async def delete_vendor_by_id(vendor_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(Vendor).where(Vendor.id == vendor_id))
+        vendor = result.scalar_one_or_none()
+        if not vendor:
+            return False
+        await session.delete(vendor)
+        await session.commit()
+        return True
+
+async def update_vendor(vendor_id: int, vendor_in: VendorUpdate):
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(Vendor).where(Vendor.id == vendor_id))
+        vendor = result.scalar_one_or_none()
+
+        if not vendor:
+            return None  # Or raise exception
+
+        # Update fields
+        vendor.textId = vendor_in.textId or vendor.textId
+        vendor.title = vendor_in.title or vendor.title
+        vendor.details = vendor_in.details or vendor.details
+        vendor.memberEmail = vendor_in.memberEmail or vendor.memberEmail
+        vendor.url = vendor_in.url or vendor.url
+        vendor.status = vendor_in.status or vendor.status
+        vendor.updated = datetime.utcnow()
+
+        await session.commit()
+        await session.refresh(vendor)
+
+        return vendor
+
